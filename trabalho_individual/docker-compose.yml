@@ -1,0 +1,21 @@
+version: "3.7"
+services:
+  api-gateway:
+    container_name: "api-gateway"
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/usr/src/app
+    ports:
+      - "7000:7000"
+  
+  chat-app:
+    container_name: "chat-app-container"
+    build:
+      context: ./chat-app
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/usr/src/app
+    ports:
+      - "7001:7001"
