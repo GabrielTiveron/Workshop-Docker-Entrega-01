@@ -1,21 +1,87 @@
 version: "3.7"
 services:
   api-gateway:
-    container_name: "api-gateway"
+    container_name: "api-gateway-container"
     build:
       context: ./api-gateway
       dockerfile: Dockerfile
-    volumes:
-      - ./src:/usr/src/app
     ports:
       - "7000:7000"
+    networks:
+      - default-network
   
   chat-app:
     container_name: "chat-app-container"
     build:
       context: ./chat-app
       dockerfile: Dockerfile
-    volumes:
-      - ./src:/usr/src/app
     ports:
       - "7001:7001"
+    networks:
+      - default-network
+  
+  chat-service:
+    container_name: "chat-service-container"
+    build:
+      context: ./chat-service
+      dockerfile: Dockerfile
+    ports:
+      - "7100:7100"
+    depends_on:
+      - chat-service-db
+    networks:
+      - default-network
+
+  chat-service-db:
+    container_name: "chat-service-db"
+    image: mysql:5.7.20
+    ports:
+      - "7200:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "password"
+      MYSQL_DATABASE: "db"
+    volumes:
+      - ./chat-service-data:/var/lib/mysql
+    networks:
+      - default-network
+
+  phpmyadmin:
+    container_name: "phpmyadmin-container"
+    image: phpmyadmin
+    ports:
+      - "7300:80"
+    environment:
+      PMA_ARBITRARY: "1"
+    volumes:
+      - ./phpmyadmin/config.user.inc.php:/etc/phpmyadmin/config.user.inc.php
+    depends_on:
+      - chat-service-db
+      - users-service-db
+    networks:
+      - default-network
+
+  users-service:
+    container_name: "users-service-container"
+    build:
+      context: ./users-service
+      dockerfile: Dockerfile
+    ports:
+      - "7101:7101"
+    depends_on:
+      - users-service-db
+    networks:
+      - default-network
+    
+  users-service-db:
+    container_name: "users-service-db"
+    image: mysql:5.7.20
+    environment:
+      MYSQL_ROOT_PASSWORD: "password"
+      MYSQL_DATABASE: "db"
+    volumes:
+      - ./users-service-data:/var/lib/mysql
+    networks:
+      - default-network
+
+networks:
+  default-network:
